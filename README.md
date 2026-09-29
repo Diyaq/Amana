@@ -232,3 +232,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 <!-- handsoff-issue-1407 -->
 - #1407: Multisig threshold is not enforced for withdraw_fees, fee-rate updates, or mediator registry changes — any single admin has unilateral control
+
+<!-- handsoff-issue-1408 -->
+- #1408: State updated after external token transfer (checks-effects-interactions violation) in release_funds, execute_cancellation, claim_expiry_refund, and resolve_dispute
