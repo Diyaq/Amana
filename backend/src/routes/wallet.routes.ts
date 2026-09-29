@@ -19,19 +19,28 @@ const pathPaymentQuoteLimiter = rateLimit({
   message: { error: "Too many quote requests, please try again later" },
 });
 
-const pathPaymentQuoteQuerySchema = z.object({
-  sourceAmount: z
-    .string()
-    .regex(/^\d+(\.\d+)?$/, "sourceAmount must be a positive decimal number")
-    .refine((v) => Number(v) > 0, "sourceAmount must be greater than 0"),
-  sourceAsset: z
-    .string()
-    .regex(/^[A-Za-z0-9]{1,12}$/, "sourceAsset must be a valid asset code"),
-  sourceAssetIssuer: z
-    .string()
-    .regex(/^G[A-Z0-9]{55}$/, "sourceAssetIssuer must be a valid Stellar public key")
-    .optional(),
-});
+const pathPaymentQuoteQuerySchema = z
+  .object({
+    sourceAmount: z
+      .string()
+      .regex(/^\d+(\.\d+)?$/, "sourceAmount must be a positive decimal number")
+      .refine((v) => Number(v) > 0, "sourceAmount must be greater than 0"),
+    sourceAsset: z
+      .string()
+      .regex(/^[A-Za-z0-9]{1,12}$/, "sourceAsset must be a valid asset code"),
+    sourceAssetIssuer: z
+      .string()
+      .regex(/^G[A-Z0-9]{55}$/, "sourceAssetIssuer must be a valid Stellar public key")
+      .optional(),
+  })
+  .refine(
+    (data) => data.sourceAsset.toUpperCase() === "XLM" || !!data.sourceAssetIssuer,
+    {
+      message:
+        "sourceAssetIssuer is required for non-native assets; asset identity is the (code, issuer) pair",
+      path: ["sourceAssetIssuer"],
+    }
+  );
 
 walletRoutes.get("/balance", authMiddleware, async (req: any, res) => {
   try {

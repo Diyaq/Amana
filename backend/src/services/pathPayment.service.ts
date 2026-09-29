@@ -47,22 +47,34 @@ export class PathPaymentService {
   /**
    * Discovers NGN -> USDC (or any asset to USDC) conversion routes.
    * Retries on transient errors and trips a circuit breaker on sustained Horizon outages.
+   *
+   * On Stellar, asset identity is the (code, issuer) pair. For any non-native
+   * asset code the caller MUST supply the issuer explicitly; we never substitute
+   * a default issuer, since that would silently quote a different asset.
    */
   public async getPathPaymentQuote(
     sourceAmount: string,
     sourceAssetCode: string,
     sourceAssetIssuer?: string
   ): Promise<any[]> {
+    const isNative =
+      sourceAssetCode === "XLM" || sourceAssetCode === "native";
+
+    if (!isNative && !sourceAssetIssuer) {
+      throw new AppError(
+        ErrorCode.VALIDATION_ERROR,
+        `sourceAssetIssuer is required for non-native asset code "${sourceAssetCode}"`,
+        400,
+        { sourceAssetCode },
+      );
+    }
+
     try {
       const server = this.stellarService.getServer();
 
-      const sourceAsset =
-        sourceAssetCode === "XLM" || sourceAssetCode === "native"
-          ? StellarSdk.Asset.native()
-          : new StellarSdk.Asset(
-              sourceAssetCode,
-              sourceAssetIssuer || "GASIVS63V6PAKAMW3ZYEX2RNNB3Q4UMRKDIQHNMH3LRNTSWVHXMTANKE"
-            );
+      const sourceAsset = isNative
+        ? StellarSdk.Asset.native()
+        : new StellarSdk.Asset(sourceAssetCode, sourceAssetIssuer as string);
 
       const network = this.stellarService.getNetworkPassphrase();
       const usdcIssuer =
