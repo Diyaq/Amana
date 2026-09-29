@@ -224,3 +224,8 @@ Quick start:
 Distributed under the MIT License. See `LICENSE` for more information.
 
 // setting up and starting out
+
+## Handsoff notes
+
+<!-- handsoff-issue-1406 -->
+- #1406: Path-payment finalization uses a global contract balance delta, letting unrelated deposits be stolen/misattributed across trades
